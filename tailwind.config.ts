@@ -9,8 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        navy: "#0F0C36",
+        purple: "#8B89C2",
+        yellow: "#FFEB95",
+        teal: "#BCE4E7",
+        gray: "#DBE1E9",
+      },
+      fontFamily: {
+        display: ["Rayat", "sans-serif"],
+        body: ["IBM Plex Sans Arabic", "sans-serif"],
       },
     },
   },
