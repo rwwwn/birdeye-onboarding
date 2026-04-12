@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { getSupabaseClient } from './supabase'
 
 export type LeadSource = 'onboarding' | 'calculator' | 'sales_form' | 'retail' | 'services' | 'food' | 'cashier' | 'store'
 
@@ -21,6 +21,13 @@ export interface LeadData {
 
 export async function captureLead(data: LeadData): Promise<{ success: boolean; error?: string }> {
   try {
+    const supabase = getSupabaseClient()
+
+    if (!supabase) {
+      console.warn('Supabase not configured — lead capture skipped')
+      return { success: false, error: 'Supabase not configured' }
+    }
+
     const { error } = await supabase
       .from('leads')
       .insert({
