@@ -143,7 +143,6 @@ export default function InventoryHealthPage() {
   const [businessType, setBusinessType] = useState<BusinessType>('retail_clothing')
   const [totalInventoryValue, setTotalInventoryValue] = useState(0)
   const [monthlyCOGS, setMonthlyCOGS] = useState(0)
-  const [numSKUs, setNumSKUs] = useState(0)
   const [deadStockPercent, setDeadStockPercent] = useState(20)
   const [results, setResults] = useState<Results>({
     inventoryTurnover: 0, daysInInventory: 0, deadStockValue: 0,
@@ -317,7 +316,7 @@ export default function InventoryHealthPage() {
               <input
                 type="number"
                 placeholder="0"
-                onChange={e => setNumSKUs(parseFloat(e.target.value) || 0)}
+                onChange={() => {}}
                 style={{ flex: 1, height: 44, padding: '0 14px', border: 'none', outline: 'none', fontSize: 14, color: '#0F0C36', background: 'transparent' }}
                 onFocus={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#0F0C36' }}
                 onBlur={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#DBE1E9' }}
