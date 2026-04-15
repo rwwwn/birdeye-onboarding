@@ -88,7 +88,7 @@ export default function FreeTools() {
 
 function ToolCard({ tool }: { tool: typeof tools[number] }) {
   return (
-    <Link href={tool.available ? tool.href : '#'} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
+    <Link href={tool.available ? tool.href : '#'} target={tool.available ? '_blank' : undefined} rel={tool.available ? 'noopener noreferrer' : undefined} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
       <div
         style={{
           border: '1.5px solid #DBE1E9',
