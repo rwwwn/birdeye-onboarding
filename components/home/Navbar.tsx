@@ -34,6 +34,11 @@ export default function Navbar() {
             </Link>
           </li>
           <li>
+            <Link href="/#tools" className="text-navy text-sm font-medium hover:text-purple transition-colors">
+              {tr({ ar: 'الأدوات', en: 'Tools' })}
+            </Link>
+          </li>
+          <li>
             <Link href="#pricing" className="text-navy text-sm font-medium hover:text-purple transition-colors">
               {tr(t.nav.pricing)}
             </Link>
