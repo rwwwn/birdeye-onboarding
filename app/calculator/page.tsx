@@ -1,239 +1,313 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import Navbar from '@/components/home/Navbar'
+import { useState, useEffect } from 'react'
+
+declare global {
+  interface Window {
+    gtag?: (command: string, action: string, params?: Record<string, unknown>) => void
+  }
+}
 import { captureLead } from '@/lib/leads'
+import Link from 'next/link'
 
 interface Inputs {
-  revenue: string
-  cogs: string
-  rent: string
-  employees: string
-  avgSalary: string
+  monthlyRevenue: number
+  cogs: number
+  rent: number
+  employees: number
+  avgSalary: number
 }
 
-type Verdict = 'Healthy' | 'At Risk' | 'Critical'
-
-const verdictConfig: Record<Verdict, { bg: string; text: string; border: string }> = {
-  Healthy:  { bg: 'bg-green-50',  text: 'text-green-700',  border: 'border-green-200' },
-  'At Risk': { bg: 'bg-amber-50', text: 'text-amber-700',  border: 'border-amber-200' },
-  Critical: { bg: 'bg-red-50',    text: 'text-red-700',    border: 'border-red-200' },
-}
-
-function parseNum(v: string): number {
-  const n = parseFloat(v.replace(/,/g, ''))
-  return isNaN(n) ? 0 : n
+interface Results {
+  grossMargin: number
+  grossProfit: number
+  netProfit: number
+  breakEven: number
+  verdict: 'Healthy' | 'At Risk' | 'Critical' | null
+  verdictAr: string
+  verdictColor: string
 }
 
 export default function CalculatorPage() {
   const [inputs, setInputs] = useState<Inputs>({
-    revenue: '',
-    cogs: '',
-    rent: '',
-    employees: '',
-    avgSalary: '',
+    monthlyRevenue: 0,
+    cogs: 0,
+    rent: 0,
+    employees: 0,
+    avgSalary: 0,
   })
-  const [emailInput, setEmailInput] = useState('')
+
+  const [results, setResults] = useState<Results>({
+    grossMargin: 0,
+    grossProfit: 0,
+    netProfit: 0,
+    breakEven: 0,
+    verdict: null,
+    verdictAr: '',
+    verdictColor: '#DBE1E9',
+  })
+
+  const [email, setEmail] = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [hasCalculated, setHasCalculated] = useState(false)
 
-  const results = useMemo(() => {
-    const revenue = parseNum(inputs.revenue)
-    const cogs = parseNum(inputs.cogs)
-    const rent = parseNum(inputs.rent)
-    const employees = parseNum(inputs.employees)
-    const avgSalary = parseNum(inputs.avgSalary)
+  useEffect(() => {
+    const { monthlyRevenue, cogs, rent, employees, avgSalary } = inputs
 
-    if (revenue === 0) return null
-
-    const grossProfit = revenue - cogs
-    const grossMargin = (grossProfit / revenue) * 100
-    const totalSalaries = employees * avgSalary
-    const netProfit = grossProfit - rent - totalSalaries
-    const totalFixed = rent + totalSalaries
-    const breakEven = cogs > 0 && revenue > cogs
-      ? (totalFixed / (1 - cogs / revenue))
-      : totalFixed
-
-    const verdict: Verdict =
-      grossMargin >= 30 ? 'Healthy' : grossMargin >= 15 ? 'At Risk' : 'Critical'
-
-    return { grossMargin, netProfit, breakEven, verdict }
-  }, [inputs])
-
-  function handleChange(key: keyof Inputs, value: string) {
-    setInputs((prev) => ({ ...prev, [key]: value }))
-  }
-
-  async function handleEmailSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!emailInput.trim() || !results) return
-
-    const result = await captureLead({
-      source: 'calculator',
-      email: emailInput.trim(),
-      monthly_revenue: parseNum(inputs.revenue),
-      gross_margin: parseFloat(results.grossMargin.toFixed(1)),
-      net_profit: results.netProfit,
-      verdict: results.verdict,
-    })
-
-    if (!result.success) {
-      console.error('Lead capture failed silently:', result.error)
+    if (monthlyRevenue === 0) {
+      setHasCalculated(false)
+      return
     }
 
-    setEmailSubmitted(true)
+    setHasCalculated(true)
+
+    const grossProfit = monthlyRevenue - cogs
+    const grossMargin = monthlyRevenue > 0
+      ? Math.round((grossProfit / monthlyRevenue) * 100)
+      : 0
+
+    const totalSalaries = employees * avgSalary
+    const totalFixedCosts = rent + totalSalaries
+    const netProfit = grossProfit - totalFixedCosts
+
+    const breakEven = grossMargin > 0
+      ? Math.round(totalFixedCosts / (grossMargin / 100))
+      : 0
+
+    let verdict: 'Healthy' | 'At Risk' | 'Critical'
+    let verdictAr: string
+    let verdictColor: string
+
+    if (grossMargin >= 30) {
+      verdict = 'Healthy'
+      verdictAr = 'صحي'
+      verdictColor = '#22c55e'
+    } else if (grossMargin >= 15) {
+      verdict = 'At Risk'
+      verdictAr = 'في خطر'
+      verdictColor = '#f59e0b'
+    } else {
+      verdict = 'Critical'
+      verdictAr = 'حرج'
+      verdictColor = '#ef4444'
+    }
+
+    setResults({ grossMargin, grossProfit, netProfit, breakEven, verdict, verdictAr, verdictColor })
+  }, [inputs])
+
+  // Track verdict view in GA4
+  useEffect(() => {
+    if (!hasCalculated || !results.verdict) return
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'calculator_result_viewed', {
+        verdict: results.verdict,
+        gross_margin: results.grossMargin,
+      })
+    }
+  }, [results.verdict]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handleInput(field: keyof Inputs, value: string) {
+    setInputs(prev => ({ ...prev, [field]: parseFloat(value) || 0 }))
   }
 
-  function inputField(
-    key: keyof Inputs,
-    label: string,
-    placeholder: string
-  ) {
-    return (
-      <div className="flex flex-col gap-1.5" key={key}>
-        <label htmlFor={key} className="text-sm font-medium text-navy">
-          {label}
-        </label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy/40 font-medium select-none">
-            ر.س
-          </span>
-          <input
-            id={key}
-            type="number"
-            min="0"
-            placeholder={placeholder}
-            value={inputs[key]}
-            onChange={(e) => handleChange(key, e.target.value)}
-            className="w-full h-11 pl-10 pr-4 rounded-xl border border-gray text-sm text-navy placeholder:text-navy/30 bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-navy focus:border-navy"
-          />
-        </div>
-      </div>
-    )
+  async function handleEmailSubmit() {
+    if (!email || submitting) return
+    setSubmitting(true)
+
+    await captureLead({
+      source: 'calculator',
+      email,
+      monthly_revenue: inputs.monthlyRevenue,
+      gross_margin: results.grossMargin,
+      net_profit: results.netProfit,
+      verdict: results.verdict || '',
+    })
+
+    setSubmitting(false)
+    setEmailSubmitted(true)
+
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'calculator_lead_captured', {
+        verdict: results.verdict,
+        gross_margin: results.grossMargin,
+      })
+    }
   }
+
+  const inputFields: { field: keyof Inputs; labelAr: string; labelEn: string; placeholder: string }[] = [
+    { field: 'monthlyRevenue', labelAr: 'الإيرادات الشهرية',       labelEn: 'Monthly Revenue',          placeholder: '50,000' },
+    { field: 'cogs',           labelAr: 'تكلفة البضاعة المباعة',    labelEn: 'Cost of Goods Sold (COGS)', placeholder: '20,000' },
+    { field: 'rent',           labelAr: 'الإيجار الشهري',           labelEn: 'Monthly Rent',              placeholder: '8,000'  },
+    { field: 'employees',      labelAr: 'عدد الموظفين',              labelEn: 'Number of Employees',       placeholder: '5'      },
+    { field: 'avgSalary',      labelAr: 'متوسط الراتب الشهري',      labelEn: 'Average Monthly Salary',    placeholder: '3,000'  },
+  ]
+
+  const statCards = [
+    { labelAr: 'هامش الربح الإجمالي', labelEn: 'Gross Margin',       value: hasCalculated ? `${results.grossMargin}%`                         : '—' },
+    { labelAr: 'صافي الربح الشهري',   labelEn: 'Monthly Net Profit',  value: hasCalculated ? `${results.netProfit.toLocaleString()} ر.س`       : '—' },
+    { labelAr: 'إجمالي الربح',        labelEn: 'Gross Profit',        value: hasCalculated ? `${results.grossProfit.toLocaleString()} ر.س`      : '—' },
+    { labelAr: 'نقطة التعادل',        labelEn: 'Break-even Point',    value: hasCalculated ? `${results.breakEven.toLocaleString()} ر.س`        : '—' },
+  ]
 
   return (
-    <>
-      <Navbar />
-      <main className="min-h-screen bg-[#F8F8FB] py-16 md:py-24 px-6 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="font-display text-4xl md:text-5xl font-bold text-navy">
-              Is your business profitable?
-            </h1>
-            <p className="mt-3 text-navy/60 text-base">
-              Enter your numbers to find out instantly.
-            </p>
-          </div>
+    <div style={{ minHeight: '100vh', background: '#DBE1E9', fontFamily: 'var(--font-body)' }}>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            {/* Inputs */}
-            <div className="bg-white rounded-2xl border border-gray p-8 flex flex-col gap-5">
-              <h2 className="font-semibold text-navy text-lg">Your monthly numbers</h2>
-              {inputField('revenue', 'Monthly Revenue', '0')}
-              {inputField('cogs', 'Cost of Goods (COGS)', '0')}
-              {inputField('rent', 'Monthly Rent', '0')}
-              {inputField('employees', 'Number of Employees', '0')}
-              {inputField('avgSalary', 'Average Salary per Employee', '0')}
+      {/* Navbar */}
+      <nav style={{ background: '#FFFFFF', padding: '16px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #DBE1E9' }}>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: '#0F0C36' }}>بيردآي</span>
+        </Link>
+        <Link href="/get-started" style={{ background: '#0F0C36', color: '#FFEB95', padding: '10px 24px', borderRadius: 999, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+          ابدأ مجاناً
+        </Link>
+      </nav>
+
+      {/* Page header */}
+      <div style={{ textAlign: 'center', padding: '60px 48px 40px' }}>
+        <p style={{ fontSize: 11, color: '#8B89C2', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>
+          أداة مجانية — Free Tool
+        </p>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 5vw, 56px)', color: '#0F0C36', marginBottom: 12, letterSpacing: '-0.02em' }}>
+          هل تجارتك مربحة فعلاً؟
+        </h1>
+        <p style={{ fontSize: 16, color: '#8B89C2', maxWidth: 480, margin: '0 auto', lineHeight: 1.6 }}>
+          Is your business actually profitable? Enter your numbers and find out instantly.
+        </p>
+      </div>
+
+      {/* Two-column layout */}
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 48px 80px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start' }}>
+
+        {/* LEFT — Inputs */}
+        <div style={{ background: '#FFFFFF', borderRadius: 20, padding: '40px' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: '#0F0C36', marginBottom: 4 }}>أدخل أرقامك</h2>
+          <p style={{ fontSize: 13, color: '#8B89C2', marginBottom: 32 }}>Enter your numbers</p>
+
+          {inputFields.map(({ field, labelAr, labelEn, placeholder }) => (
+            <div key={field} style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F0C36', marginBottom: 2 }}>
+                {labelAr}
+              </label>
+              <p style={{ fontSize: 11, color: '#8B89C2', marginBottom: 8 }}>{labelEn}</p>
+              <div
+                style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #DBE1E9', borderRadius: 10, overflow: 'hidden', transition: 'border-color 0.15s' }}
+              >
+                <input
+                  type="number"
+                  placeholder={placeholder}
+                  onChange={e => handleInput(field, e.target.value)}
+                  style={{ flex: 1, height: 44, padding: '0 14px', border: 'none', outline: 'none', fontSize: 14, color: '#0F0C36', background: 'transparent' }}
+                  onFocus={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#0F0C36' }}
+                  onBlur={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#DBE1E9' }}
+                />
+                <span style={{ padding: '0 14px', fontSize: 13, color: '#8B89C2', borderLeft: '1px solid #DBE1E9', height: 44, display: 'flex', alignItems: 'center' }}>
+                  ر.س
+                </span>
+              </div>
             </div>
-
-            {/* Results */}
-            <div className="flex flex-col gap-5">
-              {results ? (
-                <>
-                  {/* Verdict badge */}
-                  <div
-                    className={`rounded-2xl border-2 p-6 flex items-center justify-between ${verdictConfig[results.verdict].bg} ${verdictConfig[results.verdict].border}`}
-                  >
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-navy/40 mb-1">
-                        Overall verdict
-                      </p>
-                      <p className={`text-2xl font-bold ${verdictConfig[results.verdict].text}`}>
-                        {results.verdict}
-                      </p>
-                    </div>
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${verdictConfig[results.verdict].bg}`}
-                    >
-                      {results.verdict === 'Healthy' ? '✓' : results.verdict === 'At Risk' ? '⚠' : '✕'}
-                    </div>
-                  </div>
-
-                  {/* Metric cards */}
-                  <div className="grid grid-cols-1 gap-4">
-                    {[
-                      {
-                        label: 'Gross Profit Margin',
-                        value: `${results.grossMargin.toFixed(1)}%`,
-                        note: results.grossMargin >= 30 ? 'Strong margin' : results.grossMargin >= 15 ? 'Watch this closely' : 'Below healthy threshold',
-                      },
-                      {
-                        label: 'Net Profit Estimate',
-                        value: `${results.netProfit >= 0 ? '' : '-'}ر.س ${Math.abs(results.netProfit).toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
-                        note: results.netProfit >= 0 ? 'After rent & salaries' : 'Operating at a loss',
-                      },
-                      {
-                        label: 'Break-even Point',
-                        value: `ر.س ${results.breakEven.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
-                        note: 'Monthly revenue needed to cover all costs',
-                      },
-                    ].map((m) => (
-                      <div key={m.label} className="bg-white rounded-xl border border-gray p-5">
-                        <p className="text-xs text-navy/40 font-medium uppercase tracking-widest">
-                          {m.label}
-                        </p>
-                        <p className="text-2xl font-bold text-navy mt-1">{m.value}</p>
-                        <p className="text-xs text-navy/50 mt-1">{m.note}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Email capture */}
-                  <div className="bg-navy rounded-2xl p-6 text-white">
-                    <p className="font-semibold text-base mb-1">Get your detailed report</p>
-                    <p className="text-white/60 text-xs mb-4">
-                      We&apos;ll send a full breakdown with recommendations to your inbox.
-                    </p>
-                    {emailSubmitted ? (
-                      <p className="text-yellow text-sm font-medium">
-                        ✓ Report on its way to {emailInput}
-                      </p>
-                    ) : (
-                      <form onSubmit={handleEmailSubmit} className="flex gap-2">
-                        <input
-                          type="email"
-                          placeholder="your@email.com"
-                          value={emailInput}
-                          onChange={(e) => setEmailInput(e.target.value)}
-                          required
-                          className="flex-1 h-10 px-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-yellow"
-                        />
-                        <button
-                          type="submit"
-                          className="px-4 py-2 rounded-xl bg-yellow text-navy text-sm font-semibold hover:bg-opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-yellow focus:ring-offset-2 focus:ring-offset-navy"
-                        >
-                          Send
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="bg-white rounded-2xl border border-gray p-10 flex flex-col items-center justify-center text-center gap-3 min-h-[320px]">
-                  <div className="w-12 h-12 rounded-full bg-[#F8F8FB] flex items-center justify-center">
-                    <svg className="w-6 h-6 text-navy/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <p className="text-navy/40 text-sm">Enter your monthly revenue to see your results.</p>
-                </div>
-              )}
-            </div>
-          </div>
+          ))}
         </div>
-      </main>
-    </>
+
+        {/* RIGHT — Results */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+          {/* Verdict */}
+          <div style={{ background: hasCalculated ? results.verdictColor : '#0F0C36', borderRadius: 20, padding: '32px', transition: 'background 0.3s' }}>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>
+              {hasCalculated ? 'التقييم العام' : 'أدخل أرقامك لترى النتيجة'}
+            </p>
+            {hasCalculated ? (
+              <>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 48, color: '#FFFFFF', marginBottom: 4 }}>
+                  {results.verdictAr}
+                </h2>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>
+                  {results.verdict} — هامش الربح الإجمالي: {results.grossMargin}%
+                </p>
+              </>
+            ) : (
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'rgba(255,255,255,0.3)' }}>—</p>
+            )}
+          </div>
+
+          {/* Stat cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {statCards.map(({ labelAr, labelEn, value }) => (
+              <div key={labelAr} style={{ background: '#FFFFFF', borderRadius: 14, padding: '20px' }}>
+                <p style={{ fontSize: 11, color: '#8B89C2', marginBottom: 2 }}>{labelAr}</p>
+                <p style={{ fontSize: 10, color: '#BBB', marginBottom: 10 }}>{labelEn}</p>
+                <p style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: '#0F0C36', fontWeight: 700 }}>{value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Insight */}
+          {hasCalculated && results.verdict && (
+            <div style={{ background: '#FFFFFF', borderRadius: 14, padding: '20px 24px', borderRight: `4px solid ${results.verdictColor}` }}>
+              <p style={{ fontSize: 13, color: '#0F0C36', lineHeight: 1.6, marginBottom: 6 }}>
+                {results.verdict === 'Healthy'  && 'أرقامك في المنطقة الصحية. التجار الذين يستخدمون بيردآي يحسّنون هامشهم بـ 15-20% إضافية.'}
+                {results.verdict === 'At Risk'  && 'هامشك في منطقة الخطر. معظم التجار الأصحاء يعملون بهامش +30%. بيردآي يساعدك تحسّن هذا الرقم.'}
+                {results.verdict === 'Critical' && 'هامشك في المنطقة الحرجة. تحتاج مراجعة فورية لتكاليفك وأسعارك. فريقنا يمكنه مساعدتك.'}
+              </p>
+              <p style={{ fontSize: 11, color: '#AAA' }}>
+                {results.verdict === 'Healthy'  && 'Your numbers look healthy. BirdEye merchants improve their margin by an additional 15-20%.'}
+                {results.verdict === 'At Risk'  && 'Your margin is in the danger zone. Most healthy businesses operate at 30%+.'}
+                {results.verdict === 'Critical' && 'Your margin is critical. You need an immediate review of your costs and pricing.'}
+              </p>
+            </div>
+          )}
+
+          {/* Email capture */}
+          <div style={{ background: '#0F0C36', borderRadius: 20, padding: '28px' }}>
+            {!emailSubmitted ? (
+              <>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: '#FFFFFF', marginBottom: 6 }}>احصل على تقريرك الكامل</h3>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>Get your detailed report — we&apos;ll send it to your inbox</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleEmailSubmit() }}
+                    placeholder="بريدك الإلكتروني / your@email.com"
+                    style={{ flex: 1, height: 44, padding: '0 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: '#FFFFFF', fontSize: 13, outline: 'none' }}
+                  />
+                  <button
+                    onClick={handleEmailSubmit}
+                    disabled={submitting || !email}
+                    style={{ height: 44, padding: '0 20px', background: '#FFEB95', color: '#0F0C36', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: submitting || !email ? 'not-allowed' : 'pointer', opacity: submitting || !email ? 0.5 : 1, whiteSpace: 'nowrap' }}
+                  >
+                    {submitting ? '...' : 'أرسل ←'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ width: 44, height: 44, background: 'rgba(34,197,94,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M3 9l4 4 8-8" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <p style={{ color: '#FFFFFF', fontSize: 15, fontWeight: 600, marginBottom: 4 }}>تم الإرسال!</p>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>فريقنا سيتواصل معك قريباً — Our team will reach out soon</p>
+              </div>
+            )}
+          </div>
+
+          {/* CTA */}
+          <div style={{ background: '#FFEB95', borderRadius: 14, padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: '#0F0C36', marginBottom: 2 }}>جاهز تبدأ مع بيردآي؟</p>
+              <p style={{ fontSize: 11, color: 'rgba(15,12,54,0.6)' }}>Ready to start with BirdEye?</p>
+            </div>
+            <Link href="/get-started" style={{ background: '#0F0C36', color: '#FFEB95', padding: '10px 20px', borderRadius: 999, fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              ابدأ مجاناً ←
+            </Link>
+          </div>
+
+        </div>
+      </div>
+    </div>
   )
 }
