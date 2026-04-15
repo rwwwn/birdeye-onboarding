@@ -17,28 +17,40 @@ const tools = [
     available: true,
   },
   {
-    id: 'menu-audit',
-    href: '/menu-audit',
-    emoji: '🍽️',
-    tag: 'قريباً',
-    titleAr: 'تدقيق المنيو',
-    titleEn: 'Menu Audit Tool',
-    descAr: 'حلّل أسعار منيوك واكتشف أي الأصناف تحتاج إعادة تسعير.',
-    descEn: 'Analyze your menu pricing and discover which items need repricing.',
+    id: 'pricing-calculator',
+    href: '/pricing-calculator',
+    emoji: '🏷️',
+    tag: 'مجاني',
+    titleAr: 'حاسبة التسعير',
+    titleEn: 'Pricing Calculator',
+    descAr: 'احسب السعر الصحيح لمنتجاتك بناءً على التكلفة والهامش المستهدف.',
+    descEn: 'Find the right selling price based on cost and target margin.',
     color: '#BCE4E7',
-    available: false,
+    available: true,
   },
   {
-    id: 'inventory',
+    id: 'inventory-health',
     href: '/inventory-health',
     emoji: '📦',
-    tag: 'قريباً',
+    tag: 'مجاني',
     titleAr: 'صحة المخزون',
-    titleEn: 'Inventory Health Check',
-    descAr: 'اكتشف الأصناف الراكدة وفرص تحسين دورة مخزونك.',
-    descEn: 'Discover slow-moving items and inventory improvement opportunities.',
+    titleEn: 'Inventory Health',
+    descAr: 'اكتشف كم من رأس مالك محجوز في مخزون راكد.',
+    descEn: 'Find out how much capital is trapped in dead stock.',
     color: '#DBE1E9',
-    available: false,
+    available: true,
+  },
+  {
+    id: 'system-cost',
+    href: '/system-cost',
+    emoji: '💸',
+    tag: 'مجاني',
+    titleAr: 'تكلفة التشتت',
+    titleEn: 'System Cost Calculator',
+    descAr: 'اكتشف كم تخسر سنوياً بسبب استخدام أنظمة متعددة.',
+    descEn: 'Discover how much you lose annually from fragmented systems.',
+    color: '#FFEB95',
+    available: true,
   },
 ]
 
@@ -67,7 +79,7 @@ export default function FreeTools() {
         </motion.div>
 
         {/* Tools Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
           {tools.map((tool, i) => (
             <motion.div
               key={tool.id}

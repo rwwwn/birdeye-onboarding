@@ -1,6 +1,6 @@
 import { getSupabaseClient } from './supabase'
 
-export type LeadSource = 'onboarding' | 'calculator' | 'sales_form' | 'retail' | 'services' | 'food' | 'cashier' | 'store'
+export type LeadSource = 'onboarding' | 'calculator' | 'sales_form' | 'retail' | 'services' | 'food' | 'cashier' | 'store' | 'pricing_calculator' | 'inventory_health' | 'system_cost'
 
 export interface LeadData {
   source: LeadSource
