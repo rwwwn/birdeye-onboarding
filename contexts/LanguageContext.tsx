@@ -15,9 +15,16 @@ const LanguageContext = createContext<LanguageContextValue | null>(null)
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>('ar')
 
+  // Hydrate from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('birdeye-lang') as Lang | null
+    if (stored === 'en') setLang('en')
+  }, [])
+
   useEffect(() => {
     document.documentElement.lang = lang
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
+    localStorage.setItem('birdeye-lang', lang)
   }, [lang])
 
   function toggleLang() {

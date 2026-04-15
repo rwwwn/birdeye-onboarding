@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { captureLead } from '@/lib/leads'
 import Link from 'next/link'
 import Navbar from '@/components/home/Navbar'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 declare global {
   interface Window {
@@ -91,7 +92,7 @@ export default function CalculatorPage() {
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [hasCalculated, setHasCalculated] = useState(false)
-  const [lang, setLang] = useState<'ar' | 'en'>('ar')
+  const { lang } = useLanguage()
 
   const t = copy[lang]
   const fieldKeys: (keyof Inputs)[] = ['monthlyRevenue', 'cogs', 'rent', 'employees', 'avgSalary']
@@ -155,13 +156,6 @@ export default function CalculatorPage() {
           <p style={{ fontSize: 11, color: '#8B89C2', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
             {t.tag}
           </p>
-          {/* Language toggle */}
-          <button
-            onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
-            style={{ fontSize: 11, color: '#8B89C2', background: 'rgba(139,137,194,0.12)', border: 'none', borderRadius: 999, padding: '3px 12px', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-          >
-            {t.switchLang}
-          </button>
         </div>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 5vw, 56px)', color: '#0F0C36', marginBottom: 12, letterSpacing: '-0.02em' }}>
           {t.headline}
