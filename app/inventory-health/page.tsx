@@ -19,7 +19,6 @@ const businessTypes = Object.entries(BENCHMARKS).map(([key, val]) => ({
   label_en: val.name_en,
 }))
 
-// Fallback turnover ranges for types without specific inventory benchmarks
 const TURNOVER_FALLBACK = { min: 4, max: 8 }
 
 interface Results {
@@ -38,12 +37,10 @@ const copy = {
     tag: 'أداة مجانية',
     headline: 'ما مدى صحة مخزونك؟',
     sub: 'اكتشف كم من رأس مالك محجوز في مخزون راكد.',
-    switchLang: 'English',
     inputsHeadline: 'أدخل بيانات المخزون',
     businessTypeLabel: 'نوع النشاط التجاري',
     inventoryValueLabel: 'إجمالي قيمة المخزون (ر.س)',
     monthlyCOGSLabel: 'تكلفة البضاعة المباعة شهرياً (ر.س)',
-    numSKUsLabel: 'عدد المنتجات (SKU)',
     deadStockLabel: 'نسبة المخزون غير المتحرك خلال 90 يوم',
     healthScoreTitle: 'مؤشر صحة المخزون',
     verdictEmpty: 'أدخل بيانات المخزون لرؤية النتيجة',
@@ -65,8 +62,6 @@ const copy = {
     benchmarkMin: 'الحد الأدنى',
     benchmarkMax: 'الحد الأقصى',
     yourTurnover: 'معدلك',
-    deadStockCallout: 'لديك مخزون راكد بقيمة',
-    deadStockSuffix: 'ر.س',
     insightExcellent: 'ممتاز. استمر في مراقبة مخزونك لتحافظ على هذا المستوى.',
     insightGood: 'يمكنك تحسين معدل الدوران بتحليل المنتجات الأبطأ حركة وتخفيض مخزونها.',
     insightAttention: 'المخزون الراكد يعني رأس مال مجمّد. مع بيردآي تتتبع حركة كل منتج في الوقت الفعلي.',
@@ -86,12 +81,10 @@ const copy = {
     tag: 'Free Tool',
     headline: 'How healthy is your inventory?',
     sub: 'Find out how much capital is trapped in dead stock.',
-    switchLang: 'العربية',
     inputsHeadline: 'Enter inventory data',
     businessTypeLabel: 'Business Type',
     inventoryValueLabel: 'Total Inventory Value (SAR)',
     monthlyCOGSLabel: 'Monthly Cost of Goods Sold (SAR)',
-    numSKUsLabel: 'Number of SKUs (products)',
     deadStockLabel: 'Stock not moved in 90 days (%)',
     healthScoreTitle: 'Inventory Health Score',
     verdictEmpty: 'Enter inventory data to see results',
@@ -113,12 +106,10 @@ const copy = {
     benchmarkMin: 'Min',
     benchmarkMax: 'Max',
     yourTurnover: 'Your Rate',
-    deadStockCallout: 'You have',
-    deadStockSuffix: 'SAR trapped in unsold stock',
     insightExcellent: 'Excellent. Keep monitoring your inventory to maintain this level.',
-    insightGood: 'You can improve your turnover by analyzing slow-moving items and reducing their stock.',
-    insightAttention: 'Dead stock means frozen capital. With BirdEye you can track every product\'s movement in real time.',
-    insightCritical: 'Dead stock means frozen capital. With BirdEye you can track every product\'s movement in real time.',
+    insightGood: "You can improve your turnover by analyzing slow-moving items and reducing their stock.",
+    insightAttention: "Dead stock means frozen capital. With BirdEye you can track every product's movement in real time.",
+    insightCritical: "Dead stock means frozen capital. With BirdEye you can track every product's movement in real time.",
     emailHeadline: 'Get a full inventory analysis',
     emailSub: "We'll send a complete breakdown to your inbox",
     emailPlaceholder: 'your@email.com',
@@ -137,6 +128,23 @@ const scoreColors: Record<string, string> = {
   good: '#86efac',
   attention: '#f59e0b',
   critical: '#ef4444',
+}
+
+// Bug 1 fix: defined OUTSIDE the page component so it never re-mounts on state change
+function NumberInput({ onChange }: { onChange: (v: number) => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #DBE1E9', borderRadius: 10, overflow: 'hidden', transition: 'border-color 0.15s' }}>
+      <input
+        type="number"
+        placeholder="0"
+        onChange={e => onChange(parseFloat(e.target.value) || 0)}
+        style={{ flex: 1, height: 44, padding: '0 14px', border: 'none', outline: 'none', fontSize: 14, color: '#0F0C36', background: 'transparent' }}
+        onFocus={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#0F0C36' }}
+        onBlur={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#DBE1E9' }}
+      />
+      <span style={{ padding: '0 14px', fontSize: 13, color: '#8B89C2', borderLeft: '1px solid #DBE1E9', height: 44, display: 'flex', alignItems: 'center' }}>ر.س</span>
+    </div>
+  )
 }
 
 export default function InventoryHealthPage() {
@@ -167,21 +175,27 @@ export default function InventoryHealthPage() {
 
     const annualCOGS = monthlyCOGS * 12
     const inventoryTurnover = Math.round((annualCOGS / totalInventoryValue) * 10) / 10
-    const daysInInventory = Math.round(365 / inventoryTurnover)
+    const daysInInventory = inventoryTurnover > 0 ? Math.round(365 / inventoryTurnover) : 0
     const deadStockValue = Math.round(totalInventoryValue * (deadStockPercent / 100))
-    const turnoverScore = Math.min(100, Math.round((inventoryTurnover / turnoverMax) * 100))
+
+    // Bug 3 fix: weighted score — 60% turnover, 40% dead stock avoidance
+    const turnoverScore = Math.round(
+      (Math.min(inventoryTurnover, turnoverMax) / turnoverMax) * 60 +
+      (1 - deadStockPercent / 100) * 40
+    )
+    const healthScore = Math.min(100, Math.max(0, turnoverScore))
 
     let verdict: Results['verdict']
-    if (turnoverScore >= 80) verdict = 'excellent'
-    else if (turnoverScore >= 60) verdict = 'good'
-    else if (turnoverScore >= 40) verdict = 'attention'
+    if (healthScore >= 80) verdict = 'excellent'
+    else if (healthScore >= 60) verdict = 'good'
+    else if (healthScore >= 40) verdict = 'attention'
     else verdict = 'critical'
 
     setResults({
       inventoryTurnover,
       daysInInventory,
       deadStockValue,
-      healthScore: turnoverScore,
+      healthScore,
       verdict,
       verdictColor: scoreColors[verdict],
       benchmarkMin: turnoverMin,
@@ -205,29 +219,14 @@ export default function InventoryHealthPage() {
       business_type: businessType,
       verdict: results.verdict || '',
       gross_margin: results.healthScore,
-      monthly_revenue: results.deadStockValue,
+      net_profit: results.deadStockValue,
+      monthly_revenue: results.inventoryTurnover,
     })
     setSubmitting(false)
     setEmailSubmitted(true)
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('event', 'tool_lead_captured', { tool_name: 'inventory_health', verdict: results.verdict })
     }
-  }
-
-  function NumberInput({ onChange }: { onChange: (v: number) => void }) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #DBE1E9', borderRadius: 10, overflow: 'hidden', transition: 'border-color 0.15s' }}>
-        <input
-          type="number"
-          placeholder="0"
-          onChange={e => onChange(parseFloat(e.target.value) || 0)}
-          style={{ flex: 1, height: 44, padding: '0 14px', border: 'none', outline: 'none', fontSize: 14, color: '#0F0C36', background: 'transparent' }}
-          onFocus={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#0F0C36' }}
-          onBlur={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#DBE1E9' }}
-        />
-        <span style={{ padding: '0 14px', fontSize: 13, color: '#8B89C2', borderLeft: '1px solid #DBE1E9', height: 44, display: 'flex', alignItems: 'center' }}>ر.س</span>
-      </div>
-    )
   }
 
   const statValues = [
@@ -237,7 +236,6 @@ export default function InventoryHealthPage() {
     hasCalculated ? `${results.healthScore}${t.statsUnits[3]}` : '—',
   ]
 
-  // Bar position for benchmark comparison (normalised 0-20 range)
   const barScale = Math.max(results.benchmarkMax * 1.5, results.inventoryTurnover * 1.2, 1)
   const barMinPct = (results.benchmarkMin / barScale) * 100
   const barMaxPct = (results.benchmarkMax / barScale) * 100
@@ -304,21 +302,6 @@ export default function InventoryHealthPage() {
             <NumberInput onChange={setMonthlyCOGS} />
           </div>
 
-          {/* Num SKUs */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F0C36', marginBottom: 8 }}>{t.numSKUsLabel}</label>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #DBE1E9', borderRadius: 10, overflow: 'hidden', transition: 'border-color 0.15s' }}>
-              <input
-                type="number"
-                placeholder="0"
-                onChange={() => {}}
-                style={{ flex: 1, height: 44, padding: '0 14px', border: 'none', outline: 'none', fontSize: 14, color: '#0F0C36', background: 'transparent' }}
-                onFocus={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#0F0C36' }}
-                onBlur={e => { (e.target.parentElement as HTMLDivElement).style.borderColor = '#DBE1E9' }}
-              />
-            </div>
-          </div>
-
           {/* Dead stock slider */}
           <div style={{ marginBottom: 0 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F0C36', marginBottom: 8 }}>
@@ -344,21 +327,19 @@ export default function InventoryHealthPage() {
 
           {/* Health score gauge + verdict */}
           <div style={{ background: hasCalculated && results.verdict ? results.verdictColor : '#0F0C36', borderRadius: 20, padding: '32px', transition: 'background 0.3s', display: 'flex', alignItems: 'center', gap: 28 }}>
-            {/* Circular gauge */}
             <div style={{ flexShrink: 0 }}>
               <div style={{
                 width: 100, height: 100, borderRadius: '50%',
                 background: `conic-gradient(rgba(255,255,255,0.9) ${(hasCalculated ? results.healthScore : 0) * 3.6}deg, rgba(255,255,255,0.15) 0deg)`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <div style={{ width: 76, height: 76, borderRadius: '50%', background: hasCalculated && results.verdict ? results.verdictColor : '#0F0C36', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                <div style={{ width: 76, height: 76, borderRadius: '50%', background: hasCalculated && results.verdict ? results.verdictColor : '#0F0C36', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: '#FFFFFF', lineHeight: 1 }}>
                     {hasCalculated ? results.healthScore : '—'}
                   </span>
                 </div>
               </div>
             </div>
-            {/* Text */}
             <div>
               <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
                 {hasCalculated ? t.healthScoreTitle : t.verdictEmpty}
@@ -405,7 +386,6 @@ export default function InventoryHealthPage() {
             <div style={{ background: '#FFFFFF', borderRadius: 14, padding: '24px' }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: '#0F0C36', marginBottom: 16 }}>{t.benchmarkTitle}</p>
               <div style={{ position: 'relative', height: 8, background: '#F3F4F6', borderRadius: 999, margin: '8px 0 4px' }}>
-                {/* Industry range */}
                 <div style={{
                   position: 'absolute',
                   left: `${barMinPct}%`,
@@ -415,7 +395,6 @@ export default function InventoryHealthPage() {
                   borderRadius: 999,
                   opacity: 0.35,
                 }} />
-                {/* User marker */}
                 <div style={{
                   position: 'absolute',
                   left: `${userPct}%`,

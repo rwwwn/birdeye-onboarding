@@ -157,7 +157,7 @@ export default function SystemCostPage() {
       source: 'system_cost',
       email,
       monthly_revenue: totalAnnualWaste,
-      gross_margin: annualSaving,
+      net_profit: annualSaving,
       verdict: checkedSystems.length.toString(),
     })
     setSubmitting(false)

@@ -1,12 +1,12 @@
 import { getSupabaseClient } from './supabase'
 
-export type LeadSource = 'onboarding' | 'calculator' | 'sales_form' | 'retail' | 'services' | 'food' | 'cashier' | 'store' | 'pricing_calculator' | 'inventory_health' | 'system_cost'
+export type LeadSource = 'onboarding' | 'calculator' | 'pricing_calculator' | 'inventory_health' | 'system_cost' | 'sales_form' | 'retail' | 'services' | 'food' | 'cashier' | 'store'
 
 export interface LeadData {
   source: LeadSource
+  email: string
   first_name?: string
   last_name?: string
-  email: string
   phone?: string
   business_name?: string
   business_type?: string
@@ -48,7 +48,14 @@ export async function captureLead(data: LeadData): Promise<{ success: boolean; e
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...data,
+          source: data.source,
+          email: data.email,
+          first_name: data.first_name || '',
+          business_type: data.business_type || '',
+          gross_margin: data.gross_margin || 0,
+          net_profit: data.net_profit || 0,
+          monthly_revenue: data.monthly_revenue || 0,
+          verdict: data.verdict || '',
           timestamp: new Date().toISOString(),
         }),
       })
