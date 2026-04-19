@@ -11,9 +11,11 @@ export default function Navbar() {
       <nav className="h-full max-w-7xl mx-auto px-12 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xl font-bold text-navy font-display tracking-tight">
-            {tr(t.nav.logo)}
-          </span>
+          <img
+            src="/logo/BirdEye Logo-01 eng+ar 0F0C36.svg"
+            alt="BirdEye"
+            style={{ height: 30, width: 'auto', display: 'block' }}
+          />
         </Link>
 
         {/* Nav links */}

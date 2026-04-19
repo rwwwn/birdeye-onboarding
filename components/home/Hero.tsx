@@ -10,7 +10,6 @@ interface HeroProps {
 
 const copy = {
   ar: {
-    eyebrow: 'بيردآي',
     headline: 'الكاشير الذكي',
     tagline: 'The Intelligent POS',
     sub: 'الجيل الجديد من أنظمة المتاجر مصمّم لزيادة مبيعاتك ورفع تكرار الشراء',
@@ -19,7 +18,6 @@ const copy = {
     scroll: 'اسحب للأسفل',
   },
   en: {
-    eyebrow: 'BirdEye',
     headline: 'The Intelligent POS',
     tagline: 'الكاشير الذكي',
     sub: 'The next generation of merchant systems — built to grow your sales and increase repeat purchases.',
@@ -40,40 +38,71 @@ export default function Hero({ onContactClick }: HeroProps) {
   return (
     <section style={{ height: '100vh', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Video background */}
+      {/* Fallback bg */}
+      <div style={{ position: 'absolute', inset: 0, background: '#0F0C36', zIndex: 0 }} />
+
+      {/* Real video */}
       <video
         autoPlay
         muted
         loop
         playsInline
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: 1,
+        }}
       >
-        <source src="/videos/hero.mp4" type="video/mp4" />
+        <source src="/videos/herovid.MP4" type="video/mp4" />
       </video>
-
-      {/* Fallback bg when no video */}
-      <div style={{ position: 'absolute', inset: 0, background: '#0F0C36' }} />
 
       {/* Dark overlay */}
       <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.55) 100%)',
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.60) 100%)',
+        zIndex: 2,
       }} />
 
-      {/* Text */}
+      {/* Decorative illustration — bottom right */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: '40vw',
+        maxWidth: 600,
+        opacity: 0.07,
+        zIndex: 2,
+        pointerEvents: 'none',
+      }}>
+        <img src="/Illustrations/Illustrations 1.svg" alt="" style={{ width: '100%', height: 'auto' }} />
+      </div>
+
+      {/* Content */}
       <motion.div
         style={{
           opacity: textOpacity,
           y: textY,
-          position: 'absolute', inset: 0, zIndex: 10,
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          textAlign: 'center', padding: '0 24px',
+          position: 'absolute',
+          inset: 0,
+          zIndex: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: '0 24px',
         }}
       >
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.15em', marginBottom: 20 }}>
-          {t.eyebrow}
-        </p>
+        {/* Real logo */}
+        <img
+          src="/logo/BirdEye Logo AR-07 ar white.svg"
+          alt="BirdEye"
+          style={{ height: 32, width: 'auto', marginBottom: 28, opacity: 0.95 }}
+        />
 
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(52px, 9vw, 108px)', color: '#FFFFFF', lineHeight: 1.05, marginBottom: 16, letterSpacing: '-0.02em' }}>
           {t.headline}

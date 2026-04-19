@@ -112,11 +112,66 @@ export default function OnboardingShell() {
             </div>
           </div>
 
-          {/* Right illustration panel — Step 1 only */}
-          {step === 1 && (
-            <div className="hidden md:flex md:w-80 bg-yellow items-center justify-center p-8 flex-shrink-0">
-              <div className="w-full h-64 bg-white/30 rounded-2xl flex items-center justify-center text-navy/40 text-sm font-medium">
-                Illustration
+          {/* Right illustration panel */}
+          {step <= 3 && (
+            <div className="hidden md:flex md:w-80 bg-[#0F0C36] items-center justify-center p-0 flex-shrink-0 relative overflow-hidden">
+              {/* Background pattern */}
+              <img
+                src="/Illustrations/Patterns.svg"
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none"
+              />
+              {/* Illustration changes per step */}
+              {step === 1 && (
+                <div className="relative z-10 flex flex-col items-center gap-6 p-8">
+                  <img
+                    src="/Illustrations/Illustrations 1.svg"
+                    alt=""
+                    className="w-48 opacity-90"
+                  />
+                  <div className="text-center">
+                    <p className="font-display text-white text-lg leading-snug mb-2">كاشير يفهم تجارتك</p>
+                    <p className="text-white/40 text-xs">A POS that understands your business</p>
+                  </div>
+                </div>
+              )}
+              {step === 2 && (
+                <div className="relative z-10 flex flex-col items-center gap-4 p-8">
+                  <img
+                    src="/pos_screen/p1.webp"
+                    alt="BirdEye Dashboard"
+                    className="w-full rounded-xl shadow-2xl opacity-90"
+                  />
+                  <p className="text-white/40 text-xs text-center">لوحة تحكم واضحة لكل قرار</p>
+                </div>
+              )}
+              {step === 3 && (
+                <div className="relative z-10 flex flex-col items-center gap-4 p-8">
+                  <img
+                    src="/pos_images/i1.webp"
+                    alt="BirdEye POS"
+                    className="w-full rounded-xl shadow-2xl opacity-90"
+                  />
+                  <p className="text-white/40 text-xs text-center">جهاز واحد لكل شيء</p>
+                </div>
+              )}
+            </div>
+          )}
+          {step === 4 && (
+            <div className="hidden md:flex md:w-80 bg-[#FFEB95] items-center justify-center p-8 flex-shrink-0 relative overflow-hidden">
+              <img
+                src="/Illustrations/Illustrations 2.svg"
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
+              />
+              <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+                <img
+                  src="/pos_screen/p2.webp"
+                  alt="BirdEye Interface"
+                  className="w-full rounded-xl shadow-lg"
+                />
+                <p className="font-display text-navy text-base leading-snug">خطوة واحدة تفصلك عن بيردآي</p>
+                <p className="text-navy/50 text-xs">One step away from BirdEye</p>
               </div>
             </div>
           )}

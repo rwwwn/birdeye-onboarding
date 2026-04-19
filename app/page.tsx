@@ -11,6 +11,7 @@ import PricingSection from '@/components/home/PricingSection'
 import FinalCTASection from '@/components/home/FinalCTASection'
 import Footer from '@/components/home/Footer'
 import ContactForm from '@/components/home/ContactForm'
+import TrustBar from '@/components/home/TrustBar'
 
 export default function HomePage() {
   const [showContactForm, setShowContactForm] = useState(false)
@@ -20,6 +21,7 @@ export default function HomePage() {
       <Navbar />
       <main>
         <Hero onContactClick={() => setShowContactForm(true)} />
+        <TrustBar />
         <PhotoGrid />
         <FeatureAccordion />
         <FreeTools />
