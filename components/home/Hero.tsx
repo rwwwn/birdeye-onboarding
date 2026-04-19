@@ -67,20 +67,6 @@ export default function Hero({ onContactClick }: HeroProps) {
         zIndex: 2,
       }} />
 
-      {/* Decorative illustration — bottom right */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        width: '40vw',
-        maxWidth: 600,
-        opacity: 0.07,
-        zIndex: 2,
-        pointerEvents: 'none',
-      }}>
-        <img src="/Illustrations/Illustrations 1.svg" alt="" style={{ width: '100%', height: 'auto' }} />
-      </div>
-
       {/* Content */}
       <motion.div
         style={{
@@ -99,7 +85,7 @@ export default function Hero({ onContactClick }: HeroProps) {
       >
         {/* Real logo */}
         <img
-          src="/logo/BirdEye Logo AR-07 ar white.svg"
+          src="/logo/logo-white.svg"
           alt="BirdEye"
           style={{ height: 32, width: 'auto', marginBottom: 28, opacity: 0.95 }}
         />

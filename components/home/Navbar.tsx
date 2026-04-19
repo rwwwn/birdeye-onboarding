@@ -12,7 +12,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 flex-shrink-0">
           <img
-            src="/logo/BirdEye Logo-01 eng+ar 0F0C36.svg"
+            src="public/logo/BirdEye Logo AR-07 ar white.svg"
             alt="BirdEye"
             style={{ height: 30, width: 'auto', display: 'block' }}
           />

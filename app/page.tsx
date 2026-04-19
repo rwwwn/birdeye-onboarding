@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Navbar from '@/components/home/Navbar'
 import Hero from '@/components/home/Hero'
-import PhotoGrid from '@/components/home/PhotoGrid'
 import FeatureAccordion from '@/components/home/FeatureAccordion'
 import FreeTools from '@/components/home/FreeTools'
 import IndustryCards from '@/components/home/IndustryCards'
@@ -22,7 +21,6 @@ export default function HomePage() {
       <main>
         <Hero onContactClick={() => setShowContactForm(true)} />
         <TrustBar />
-        <PhotoGrid />
         <FeatureAccordion />
         <FreeTools />
         <IndustryCards />
