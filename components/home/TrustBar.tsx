@@ -1,14 +1,15 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 const logos = [
-  { src: '/trust_signals/monshaat.webp', alt: "Monsha'at" },
-  { src: '/trust_signals/manassa-tech.webp', alt: 'ManassTech / CST' },
-  { src: '/trust_signals/saudi-business-center.webp', alt: 'Saudi Business Center' },
-  { src: '/trust_signals/ZATCA.webp', alt: 'ZATCA' },
-  { src: '/trust_signals/saudi-made.webp', alt: 'Saudi Made' },
+  { src: '/trust_signals/monshaat.png', alt: "Monsha'at" },
+  { src: '/trust_signals/manassa-tech.png', alt: 'ManassTech / CST' },
+  { src: '/trust_signals/saudi-business-center.png', alt: 'Saudi Business Center' },
+  { src: '/trust_signals/zacta.png', alt: 'ZATCA' },
+  { src: '/trust_signals/saudi-made.png', alt: 'Saudi Made' },
 ]
 
 // Exactly 2× for seamless translateX(-50%) loop
@@ -97,12 +98,13 @@ export default function TrustBar() {
             {t.sub}
           </p>
 
-          {/* Row 1 — scrolls left */}
+          {/* Row 1 — scrolls left, starts mid-scroll */}
           <div style={{ overflow: 'hidden', marginBottom: 12 }}>
             <div style={{
               display: 'flex',
               width: 'max-content',
               animation: 'marquee-left 20s linear infinite',
+              animationDelay: '-10s',
             }}>
               {track.map((logo, i) => (
                 <LogoCard key={`l1-${i}`} src={logo.src} alt={logo.alt} />
@@ -110,12 +112,13 @@ export default function TrustBar() {
             </div>
           </div>
 
-          {/* Row 2 — scrolls right */}
+          {/* Row 2 — scrolls right, starts mid-scroll */}
           <div style={{ overflow: 'hidden', marginBottom: 44 }}>
             <div style={{
               display: 'flex',
               width: 'max-content',
               animation: 'marquee-right 20s linear infinite',
+              animationDelay: '-5s',
             }}>
               {track.map((logo, i) => (
                 <LogoCard key={`l2-${i}`} src={logo.src} alt={logo.alt} />
@@ -149,6 +152,8 @@ export default function TrustBar() {
 }
 
 function LogoCard({ src, alt }: { src: string; alt: string }) {
+  const [imgError, setImgError] = useState(false)
+
   return (
     <div style={{
       flexShrink: 0,
@@ -163,16 +168,16 @@ function LogoCard({ src, alt }: { src: string; alt: string }) {
       boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
       padding: '12px 16px',
     }}>
-      <img
-        src={src}
-        alt={alt}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-          display: 'block',
-        }}
-      />
+      {imgError ? (
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#0F0C36', textAlign: 'center', lineHeight: 1.3 }}>{alt}</span>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          onError={() => setImgError(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+        />
+      )}
     </div>
   )
 }
