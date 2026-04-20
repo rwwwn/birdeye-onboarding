@@ -5,8 +5,8 @@ import { useLanguage } from '@/contexts/LanguageContext'
 
 const logos = [
   { src: '/trust_signals/monshaat.webp', alt: "Monsha'at" },
-  { src: '/trust_signals/manassa%20tech.webp', alt: 'ManassTech / CST' },
-  { src: '/trust_signals/saudi%20business%20center.webp', alt: 'Saudi Business Center' },
+  { src: '/trust_signals/manassa-tech.webp', alt: 'ManassTech / CST' },
+  { src: '/trust_signals/saudi-business-center.webp', alt: 'Saudi Business Center' },
   { src: '/trust_signals/ZATCA.webp', alt: 'ZATCA' },
   { src: '/trust_signals/saudi-made.webp', alt: 'Saudi Made' },
 ]
