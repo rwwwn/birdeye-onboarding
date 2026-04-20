@@ -4,8 +4,8 @@ export const BENCHMARKS = {
     name_en: 'Restaurant',
     food_cost_min: 28,
     food_cost_max: 35,
-    gross_margin_min: 28,
-    gross_margin_max: 35,
+    gross_margin_min: 65,
+    gross_margin_max: 72,
     net_margin_min: 3,
     net_margin_max: 9,
     net_margin_good: 15,
@@ -18,8 +18,8 @@ export const BENCHMARKS = {
     name_en: 'Cafe / Coffee Shop',
     food_cost_min: 25,
     food_cost_max: 35,
-    gross_margin_min: 25,
-    gross_margin_max: 35,
+    gross_margin_min: 65,
+    gross_margin_max: 75,
     net_margin_min: 3,
     net_margin_max: 9,
     net_margin_good: 15,
@@ -32,8 +32,8 @@ export const BENCHMARKS = {
     name_en: 'Bakery & Desserts',
     food_cost_min: 30,
     food_cost_max: 35,
-    gross_margin_min: 30,
-    gross_margin_max: 35,
+    gross_margin_min: 65,
+    gross_margin_max: 70,
     net_margin_min: 3,
     net_margin_max: 9,
     net_margin_good: 12,
@@ -109,7 +109,10 @@ export function getBenchmark(type: BusinessType) {
   return BENCHMARKS[type]
 }
 
-export function getMarginVerdict(margin: number, benchmark: (typeof BENCHMARKS)[BusinessType]) {
+export function getMarginVerdict(
+  margin: number,
+  benchmark: (typeof BENCHMARKS)[BusinessType]
+) {
   if (margin >= benchmark.gross_margin_min) {
     return {
       verdict: 'Healthy',

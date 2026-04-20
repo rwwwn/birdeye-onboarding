@@ -19,14 +19,14 @@ const copy = {
     label: 'اعتمادات حكومية',
     heading: 'موثوق من المنصات الحكومية',
     headingSub: 'كل شيء متوافق وآمن',
-    sub: 'بيردآي معتمد من الجهات الحكومية السعودية، بما فيها هيئة الزكاة والضريبة والجمارك ومنصة منشآت.',
+    sub: 'نظام معتمد ومحدّث باستمرار يلتزم بأعلى معايير الأمان واللوائح الحكومية.',
     cta: 'اعرف أكثر',
   },
   en: {
     label: 'Government Accreditations',
     heading: 'Trusted by government platforms',
     headingSub: 'Everything is compliant and secure',
-    sub: 'BirdEye is accredited by Saudi government authorities including ZATCA and the Monsha\'at platform.',
+    sub: 'A certified, continuously updated system that meets the highest security standards and government regulations.',
     cta: 'Learn more',
   },
 }
@@ -60,22 +60,23 @@ export default function TrustBar() {
       `}</style>
 
       <section style={{ background: '#F7F5F0', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1215, margin: '0 auto' }}>
 
           {/* Card container */}
           <div style={{
             background: '#EDEAE3',
-            borderRadius: 24,
+            borderRadius: 150,
             padding: '52px 48px 44px',
             textAlign: 'center',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.08)',
           }}>
 
             {/* Label */}
             <p style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.16em',
+              fontFamily: 'var(--font-display)',
+              fontSize: 16,
+              fontWeight: 400,
+              letterSpacing: '0.12em',
               textTransform: 'uppercase',
               color: '#9E9B93',
               marginBottom: 20,
@@ -86,21 +87,23 @@ export default function TrustBar() {
             {/* Heading */}
             <h2 style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(26px, 4vw, 40px)',
+              fontSize: 32,
+              fontWeight: 700,
               color: '#0F0C36',
-              lineHeight: 1.2,
-              marginBottom: 8,
-              letterSpacing: '-0.02em',
+              lineHeight: 1.25,
+              marginBottom: 4,
+              letterSpacing: '-0.01em',
             }}>
               {t.heading}
             </h2>
             <h2 style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(26px, 4vw, 40px)',
+              fontSize: 32,
+              fontWeight: 700,
               color: '#0F0C36',
-              lineHeight: 1.2,
+              lineHeight: 1.25,
               marginBottom: 20,
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.01em',
               opacity: 0.45,
             }}>
               {t.headingSub}
@@ -108,8 +111,9 @@ export default function TrustBar() {
 
             {/* Subtitle */}
             <p style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 15,
+              fontFamily: 'var(--font-display)',
+              fontSize: 16,
+              fontWeight: 500,
               color: '#8C8880',
               maxWidth: 520,
               margin: '0 auto 44px',

@@ -12,7 +12,20 @@ declare global {
   }
 }
 
-const BIRDEYE_ANNUAL = 3570
+const BIRDEYE_PRICING = {
+  basic: {
+    name_ar: 'الباقة الأساسية',
+    name_en: 'Basic Plan',
+    yearly: { 1: 3570, 2: 5712, 3: 8565 },
+    perYear: { 1: 3570, 2: 2856, 3: 2855 },
+  },
+  premium: {
+    name_ar: 'الباقة المميزة',
+    name_en: 'Premium Plan',
+    yearly: { 1: 4820, 2: 7712, 3: 11568 },
+    perYear: { 1: 4820, 2: 3856, 3: 3856 },
+  },
+}
 
 interface SystemItem {
   key: string
@@ -21,16 +34,17 @@ interface SystemItem {
   emoji: string
   checked: boolean
   cost: number
+  inputMode: 'monthly' | 'yearly'
 }
 
 const defaultSystems: SystemItem[] = [
-  { key: 'pos', label_ar: 'نظام الكاشير', label_en: 'POS System', emoji: '🖥️', checked: false, cost: 0 },
-  { key: 'store', label_ar: 'متجر إلكتروني', label_en: 'Online Store', emoji: '🛒', checked: false, cost: 0 },
-  { key: 'inventory', label_ar: 'نظام المخزون', label_en: 'Inventory System', emoji: '📦', checked: false, cost: 0 },
-  { key: 'loyalty', label_ar: 'برنامج الولاء', label_en: 'Loyalty Program', emoji: '⭐', checked: false, cost: 0 },
-  { key: 'accounting', label_ar: 'نظام المحاسبة', label_en: 'Accounting', emoji: '📊', checked: false, cost: 0 },
-  { key: 'delivery', label_ar: 'منصة التوصيل', label_en: 'Delivery Platform', emoji: '🛵', checked: false, cost: 0 },
-  { key: 'marketing', label_ar: 'أداة التسويق', label_en: 'Marketing Tool', emoji: '📣', checked: false, cost: 0 },
+  { key: 'pos', label_ar: 'نظام الكاشير', label_en: 'POS System', emoji: '🖥️', checked: false, cost: 0, inputMode: 'monthly' },
+  { key: 'store', label_ar: 'متجر إلكتروني', label_en: 'Online Store', emoji: '🛒', checked: false, cost: 0, inputMode: 'monthly' },
+  { key: 'inventory', label_ar: 'نظام المخزون', label_en: 'Inventory System', emoji: '📦', checked: false, cost: 0, inputMode: 'monthly' },
+  { key: 'loyalty', label_ar: 'برنامج الولاء', label_en: 'Loyalty Program', emoji: '⭐', checked: false, cost: 0, inputMode: 'monthly' },
+  { key: 'accounting', label_ar: 'نظام المحاسبة', label_en: 'Accounting', emoji: '📊', checked: false, cost: 0, inputMode: 'monthly' },
+  { key: 'delivery', label_ar: 'منصة التوصيل', label_en: 'Delivery Platform', emoji: '🛵', checked: false, cost: 0, inputMode: 'monthly' },
+  { key: 'marketing', label_ar: 'أداة التسويق', label_en: 'Marketing Tool', emoji: '📣', checked: false, cost: 0, inputMode: 'monthly' },
 ]
 
 const copy = {
@@ -115,30 +129,38 @@ export default function SystemCostPage() {
   const [systems, setSystems] = useState<SystemItem[]>(defaultSystems)
   const [hoursPerWeek, setHoursPerWeek] = useState(5)
   const [hourlyRate, setHourlyRate] = useState(0)
+  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic')
+  const [selectedDuration, setSelectedDuration] = useState<1 | 2 | 3>(1)
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [emailSubmitted, setEmailSubmitted] = useState(false)
 
   const t = copy[lang]
 
+  const birdeyeAnnualCost = BIRDEYE_PRICING[selectedPlan].perYear[selectedDuration]
+  const birdeyeTotalCost = BIRDEYE_PRICING[selectedPlan].yearly[selectedDuration]
+
   const checkedSystems = systems.filter(s => s.checked)
-  const monthlySubscriptions = checkedSystems.reduce((sum, s) => sum + s.cost, 0)
+  const monthlySubscriptions = checkedSystems.reduce((sum, s) => {
+    const monthlyCost = s.inputMode === 'monthly' ? s.cost : s.cost / 12
+    return sum + monthlyCost
+  }, 0)
   const annualSubscriptions = monthlySubscriptions * 12
   const monthlyHoursWasted = hoursPerWeek * 4.33
   const monthlyLaborWaste = monthlyHoursWasted * hourlyRate
   const annualLaborWaste = Math.round(monthlyLaborWaste * 12)
   const totalAnnualWaste = annualSubscriptions + annualLaborWaste
-  const annualSaving = totalAnnualWaste - BIRDEYE_ANNUAL
-  const roiMonths = annualSaving > 0 && BIRDEYE_ANNUAL > 0
-    ? Math.ceil((BIRDEYE_ANNUAL / 12) / ((annualSaving / 12)))
+  const annualSaving = totalAnnualWaste - birdeyeAnnualCost
+  const roiMonths = annualSaving > 0
+    ? Math.ceil(birdeyeAnnualCost / (annualSaving / 12))
     : 0
   const hasCalculated = checkedSystems.length > 0
-  const multiplier = BIRDEYE_ANNUAL > 0 ? Math.round((totalAnnualWaste / BIRDEYE_ANNUAL) * 10) / 10 : 0
+  const multiplier = birdeyeAnnualCost > 0 ? Math.round((totalAnnualWaste / birdeyeAnnualCost) * 10) / 10 : 0
 
-  const barTotal = totalAnnualWaste + BIRDEYE_ANNUAL
+  const barTotal = totalAnnualWaste + birdeyeAnnualCost
   const subPct = barTotal > 0 ? (annualSubscriptions / barTotal) * 100 : 0
   const laborPct = barTotal > 0 ? (annualLaborWaste / barTotal) * 100 : 0
-  const birdeyePct = barTotal > 0 ? (BIRDEYE_ANNUAL / barTotal) * 100 : 0
+  const birdeyePct = barTotal > 0 ? (birdeyeAnnualCost / barTotal) * 100 : 0
 
   useEffect(() => {
     if (!hasCalculated) return
@@ -178,6 +200,10 @@ export default function SystemCostPage() {
     setSystems(prev => prev.map(s => s.key === key ? { ...s, cost } : s))
   }
 
+  function toggleInputMode(key: string) {
+    setSystems(prev => prev.map(s => s.key === key ? { ...s, inputMode: s.inputMode === 'monthly' ? 'yearly' : 'monthly' } : s))
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#DBE1E9', fontFamily: 'var(--font-body)' }} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <Navbar />
@@ -206,7 +232,7 @@ export default function SystemCostPage() {
           {/* Systems checklist */}
           <div style={{ background: '#FFFFFF', borderRadius: 20, padding: '40px' }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: '#0F0C36', marginBottom: 6 }}>{t.systemsHeadline}</h2>
-            <p style={{ fontSize: 13, color: '#8B89C2', marginBottom: 28 }}>{t.systemsSubtitle}</p>
+            <p style={{ fontSize: 13, color: '#8B89C2', marginBottom: 20 }}>{t.systemsSubtitle}</p>
 
             {systems.map(system => (
               <div
@@ -250,13 +276,77 @@ export default function SystemCostPage() {
                       placeholder="0"
                       value={system.cost || ''}
                       onChange={e => updateCost(system.key, parseFloat(e.target.value) || 0)}
-                      style={{ width: 80, height: 36, padding: '0 10px', border: 'none', outline: 'none', fontSize: 13, color: '#0F0C36', background: 'transparent' }}
+                      style={{ width: 72, height: 36, padding: '0 10px', border: 'none', outline: 'none', fontSize: 13, color: '#0F0C36', background: 'transparent' }}
                     />
-                    <span style={{ padding: '0 10px', fontSize: 12, color: '#8B89C2', borderLeft: '1px solid #DBE1E9', height: 36, display: 'flex', alignItems: 'center' }}>ر.س</span>
+                    <button
+                      onClick={() => toggleInputMode(system.key)}
+                      style={{ padding: '0 8px', height: 36, border: 'none', borderLeft: '1px solid #DBE1E9', background: system.inputMode === 'monthly' ? '#F3F4F6' : '#0F0C36', color: system.inputMode === 'monthly' ? '#8B89C2' : '#FFEB95', fontSize: 10, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
+                    >
+                      {lang === 'ar' ? (system.inputMode === 'monthly' ? 'شهري' : 'سنوي') : (system.inputMode === 'monthly' ? 'mo' : 'yr')}
+                    </button>
                   </div>
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Plan selector */}
+          <div style={{ background: '#FFFFFF', borderRadius: 20, padding: '32px' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: '#0F0C36', marginBottom: 8 }}>
+              {lang === 'ar' ? 'قارن مع بيردآي' : 'Compare with BirdEye'}
+            </h2>
+            <p style={{ fontSize: 13, color: '#8B89C2', marginBottom: 24 }}>
+              {lang === 'ar' ? 'اختر الباقة ومدة الاشتراك' : 'Select plan and subscription duration'}
+            </p>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F0C36', marginBottom: 10 }}>
+                {lang === 'ar' ? 'الباقة' : 'Plan'}
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {(['basic', 'premium'] as const).map(plan => (
+                  <button key={plan} onClick={() => setSelectedPlan(plan)} style={{ padding: '12px 16px', borderRadius: 12, border: `2px solid ${selectedPlan === plan ? '#0F0C36' : '#DBE1E9'}`, background: selectedPlan === plan ? '#0F0C36' : '#FFFFFF', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'start' }}>
+                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: selectedPlan === plan ? '#FFEB95' : '#0F0C36', margin: '0 0 4px' }}>
+                      {lang === 'ar' ? BIRDEYE_PRICING[plan].name_ar : BIRDEYE_PRICING[plan].name_en}
+                    </p>
+                    <p style={{ fontSize: 12, color: selectedPlan === plan ? 'rgba(255,255,255,0.6)' : '#8B89C2', margin: 0 }}>
+                      {BIRDEYE_PRICING[plan].perYear[selectedDuration].toLocaleString()} ر.س / {lang === 'ar' ? 'سنة' : 'year'}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F0C36', marginBottom: 10 }}>
+                {lang === 'ar' ? 'مدة الاشتراك' : 'Subscription Duration'}
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                {([1, 2, 3] as const).map(duration => (
+                  <button key={duration} onClick={() => setSelectedDuration(duration)} style={{ padding: '10px 8px', borderRadius: 10, border: `2px solid ${selectedDuration === duration ? '#0F0C36' : '#DBE1E9'}`, background: selectedDuration === duration ? '#0F0C36' : '#FFFFFF', cursor: 'pointer', transition: 'all 0.15s' }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: selectedDuration === duration ? '#FFEB95' : '#0F0C36', margin: '0 0 2px' }}>
+                      {duration} {lang === 'ar' ? 'سنة' : duration === 1 ? 'Year' : 'Years'}
+                    </p>
+                    {duration > 1 && (
+                      <p style={{ fontSize: 10, color: selectedDuration === duration ? 'rgba(255,255,255,0.6)' : '#22c55e', margin: 0 }}>
+                        {lang === 'ar' ? 'توفير أكبر' : 'Better value'}
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ padding: '16px', background: '#F9F9F9', borderRadius: 12, border: '1px solid #DBE1E9' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 13, color: '#8B89C2' }}>{lang === 'ar' ? 'إجمالي الاشتراك' : 'Total subscription'}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#0F0C36' }}>{birdeyeTotalCost.toLocaleString()} ر.س</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, color: '#8B89C2' }}>{lang === 'ar' ? 'تكلفة سنوية' : 'Annual cost'}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#22c55e' }}>{birdeyeAnnualCost.toLocaleString()} ر.س / {lang === 'ar' ? 'سنة' : 'year'}</span>
+              </div>
+            </div>
           </div>
 
           {/* Hidden costs */}
@@ -345,9 +435,15 @@ export default function SystemCostPage() {
               </p>
             </div>
             <div style={{ background: '#FFFFFF', borderRadius: 14, padding: '20px' }}>
-              <p style={{ fontSize: 11, color: '#8B89C2', marginBottom: 10 }}>{t.birdeyeCost}</p>
+              <p style={{ fontSize: 11, color: '#8B89C2', marginBottom: 4 }}>
+                {lang === 'ar' ? `مع بيردآي (${BIRDEYE_PRICING[selectedPlan].name_ar})` : `With BirdEye (${BIRDEYE_PRICING[selectedPlan].name_en})`}
+              </p>
+              <p style={{ fontSize: 10, color: '#BBB', marginBottom: 10 }}>
+                {selectedDuration} {lang === 'ar' ? 'سنة' : selectedDuration === 1 ? 'year' : 'years'}
+              </p>
               <p style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: '#22c55e', fontWeight: 700 }}>
-                {BIRDEYE_ANNUAL.toLocaleString()} ر.س
+                {birdeyeAnnualCost.toLocaleString()} ر.س
+                <span style={{ fontSize: 12, color: '#8B89C2' }}> / {lang === 'ar' ? 'سنة' : 'year'}</span>
               </p>
             </div>
           </div>
@@ -402,22 +498,15 @@ export default function SystemCostPage() {
 
           {/* CTA */}
           {hasCalculated && annualSaving > 0 && (
-            <Link
-              href="/get-started"
-              style={{
-                display: 'block',
-                background: '#FFEB95',
-                borderRadius: 14,
-                padding: '20px 24px',
-                textAlign: 'center',
-                textDecoration: 'none',
-                fontFamily: 'var(--font-display)',
-                fontSize: 18,
-                color: '#0F0C36',
-                fontWeight: 700,
-              }}
-            >
-              {t.ctaPrefix} {annualSaving.toLocaleString()} ر.س — {t.ctaSuffix}
+            <Link href="/get-started" style={{ display: 'block', background: '#FFEB95', borderRadius: 14, padding: '20px 24px', textAlign: 'center', textDecoration: 'none' }}>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: '#0F0C36', margin: '0 0 4px' }}>
+                {lang === 'ar' ? `وفّر ${annualSaving.toLocaleString()} ر.س سنوياً` : `Save ${annualSaving.toLocaleString()} SAR annually`}
+              </p>
+              <p style={{ fontSize: 13, color: 'rgba(15,12,54,0.6)', margin: 0 }}>
+                {lang === 'ar'
+                  ? `ابدأ مع ${BIRDEYE_PRICING[selectedPlan].name_ar} — ${birdeyeTotalCost.toLocaleString()} ر.س لـ ${selectedDuration} سنة`
+                  : `Start with ${BIRDEYE_PRICING[selectedPlan].name_en} — ${birdeyeTotalCost.toLocaleString()} SAR for ${selectedDuration} year${selectedDuration > 1 ? 's' : ''}`}
+              </p>
             </Link>
           )}
 

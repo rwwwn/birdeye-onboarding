@@ -108,7 +108,10 @@ export default function CalculatorPage() {
     const netProfit = grossProfit - totalFixedCosts
     const breakEven = grossMargin > 0 ? Math.round(totalFixedCosts / (grossMargin / 100)) : 0
 
-    const verdict: 'Healthy' | 'At Risk' | 'Critical' = grossMargin >= 30 ? 'Healthy' : grossMargin >= 15 ? 'At Risk' : 'Critical'
+   const verdict: 'Healthy' | 'At Risk' | 'Critical' =
+  grossMargin >= 30 && netProfit > 0 ? 'Healthy' :
+  grossMargin >= 15 || netProfit >= 0 ? 'At Risk' :
+  'Critical'
     const verdictAr = verdict === 'Healthy' ? 'صحي' : verdict === 'At Risk' ? 'في خطر' : 'حرج'
     const verdictColor = verdict === 'Healthy' ? '#22c55e' : verdict === 'At Risk' ? '#f59e0b' : '#ef4444'
 
@@ -126,16 +129,41 @@ export default function CalculatorPage() {
     setInputs(prev => ({ ...prev, [field]: parseFloat(value) || 0 }))
   }
 
-  async function handleEmailSubmit() {
-    if (!email || submitting) return
-    setSubmitting(true)
-    await captureLead({ source: 'calculator', email, monthly_revenue: inputs.monthlyRevenue, gross_margin: results.grossMargin, net_profit: results.netProfit, verdict: results.verdict || '' })
-    setSubmitting(false)
+async function handleEmailSubmit() {
+  if (!email || submitting) return
+  setSubmitting(true)
+  try {
+    await captureLead({
+      source: 'calculator',
+      email,
+      monthly_revenue: inputs.monthlyRevenue,
+      gross_margin: results.grossMargin,
+      net_profit: results.netProfit,
+      verdict: results.verdict || '',
+      message: JSON.stringify({
+        cogs: inputs.cogs,
+        gross_profit: results.grossProfit,
+        fixed_costs: inputs.rent + (inputs.employees * inputs.avgSalary),
+        break_even: results.breakEven,
+        rent: inputs.rent,
+        employees: inputs.employees,
+        avg_salary: inputs.avgSalary,
+      })
+    })
     setEmailSubmitted(true)
+    // GA4 event — inside try so it only fires on success
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'calculator_lead_captured', { verdict: results.verdict, gross_margin: results.grossMargin })
+      window.gtag('event', 'calculator_lead_captured', {
+        verdict: results.verdict,
+        gross_margin: results.grossMargin,
+      })
     }
+  } catch (e) {
+    console.error('captureLead error:', e)
+  } finally {
+    setSubmitting(false)
   }
+}
 
   const statValues = [
     hasCalculated ? `${results.grossMargin}%` : '—',

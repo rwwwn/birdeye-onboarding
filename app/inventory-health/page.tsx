@@ -62,6 +62,9 @@ const copy = {
     benchmarkMin: 'الحد الأدنى',
     benchmarkMax: 'الحد الأقصى',
     yourTurnover: 'معدلك',
+    deadStockCapitalLabel: 'قيمة المخزون الراكد',
+    opportunityCostLabel: 'تكلفة الفرصة الضائعة',
+    opportunityCostUnit: 'ر.س سنوياً',
     insightExcellent: 'ممتاز. استمر في مراقبة مخزونك لتحافظ على هذا المستوى.',
     insightGood: 'يمكنك تحسين معدل الدوران بتحليل المنتجات الأبطأ حركة وتخفيض مخزونها.',
     insightAttention: 'المخزون الراكد يعني رأس مال مجمّد. مع بيردآي تتتبع حركة كل منتج في الوقت الفعلي.',
@@ -106,6 +109,9 @@ const copy = {
     benchmarkMin: 'Min',
     benchmarkMax: 'Max',
     yourTurnover: 'Your Rate',
+    deadStockCapitalLabel: 'Dead stock value',
+    opportunityCostLabel: 'Opportunity cost',
+    opportunityCostUnit: 'SAR / year',
     insightExcellent: 'Excellent. Keep monitoring your inventory to maintain this level.',
     insightGood: "You can improve your turnover by analyzing slow-moving items and reducing their stock.",
     insightAttention: "Dead stock means frozen capital. With BirdEye you can track every product's movement in real time.",
@@ -219,7 +225,7 @@ export default function InventoryHealthPage() {
       business_type: businessType,
       verdict: results.verdict || '',
       gross_margin: results.healthScore,
-      net_profit: results.deadStockValue,
+      net_profit: Math.round(results.deadStockValue * 0.15),
       monthly_revenue: results.inventoryTurnover,
     })
     setSubmitting(false)
@@ -370,16 +376,29 @@ export default function InventoryHealthPage() {
           </div>
 
           {/* Dead stock callout */}
-          {hasCalculated && results.deadStockValue > 0 && (
-            <div style={{ background: '#0F0C36', borderRadius: 14, padding: '20px 24px' }}>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>
-                {lang === 'ar' ? 'أنت تخسر سنوياً بسبب المخزون الراكد' : 'Estimated annual loss from dead stock'}
-              </p>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: '#FFEB95' }}>
-                {(results.deadStockValue * 12).toLocaleString()} ر.س
-              </p>
-            </div>
-          )}
+          {hasCalculated && results.deadStockValue > 0 && (() => {
+            const opportunityCost = Math.round(results.deadStockValue * 0.15)
+            return (
+              <div style={{ background: '#0F0C36', borderRadius: 14, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+                    {t.deadStockCapitalLabel}
+                  </p>
+                  <p style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: '#FFFFFF' }}>
+                    {results.deadStockValue.toLocaleString()} ر.س
+                  </p>
+                </div>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16 }}>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+                    {t.opportunityCostLabel}
+                  </p>
+                  <p style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: '#FFEB95' }}>
+                    {opportunityCost.toLocaleString()} {t.opportunityCostUnit}
+                  </p>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Benchmark comparison bar */}
           {hasCalculated && (

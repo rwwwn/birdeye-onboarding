@@ -3,14 +3,17 @@
 import { useState } from 'react'
 import Navbar from '@/components/home/Navbar'
 import Hero from '@/components/home/Hero'
+import BrandBar from '@/components/home/BrandBar'
 import FeatureAccordion from '@/components/home/FeatureAccordion'
+import PartnersSection from '@/components/home/PartnersSection'
+import SuccessStories from '@/components/home/SuccessStories'
+import TrustBar from '@/components/home/TrustBar'
 import FreeTools from '@/components/home/FreeTools'
 import IndustryCards from '@/components/home/IndustryCards'
 import PricingSection from '@/components/home/PricingSection'
 import FinalCTASection from '@/components/home/FinalCTASection'
 import Footer from '@/components/home/Footer'
 import ContactForm from '@/components/home/ContactForm'
-import TrustBar from '@/components/home/TrustBar'
 
 export default function HomePage() {
   const [showContactForm, setShowContactForm] = useState(false)
@@ -20,8 +23,11 @@ export default function HomePage() {
       <Navbar />
       <main>
         <Hero onContactClick={() => setShowContactForm(true)} />
-        <TrustBar />
+        <BrandBar />
         <FeatureAccordion />
+        <PartnersSection />
+        <SuccessStories />
+        <TrustBar />
         <FreeTools />
         <IndustryCards />
         <PricingSection />
