@@ -5,13 +5,13 @@ import { useLanguage } from '@/contexts/LanguageContext'
 
 const logos = [
   { src: '/trust_signals/monshaat.webp', alt: "Monsha'at" },
-  { src: '/trust_signals/manassa tech.webp', alt: 'ManassTech / CST' },
-  { src: '/trust_signals/saudi business center.webp', alt: 'Saudi Business Center' },
+  { src: '/trust_signals/manassa%20tech.webp', alt: 'ManassTech / CST' },
+  { src: '/trust_signals/saudi%20business%20center.webp', alt: 'Saudi Business Center' },
   { src: '/trust_signals/ZATCA.webp', alt: 'ZATCA' },
   { src: '/trust_signals/saudi-made.webp', alt: 'Saudi Made' },
 ]
 
-// Duplicate 4× so the track is long enough for seamless looping at any viewport
+// Duplicate so the track is long enough for seamless looping at any viewport
 const track = [...logos, ...logos, ...logos, ...logos]
 
 const copy = {
@@ -37,28 +37,6 @@ export default function TrustBar() {
 
   return (
     <>
-      {/* CSS keyframe animations injected inline */}
-      <style>{`
-        @keyframes marquee-left {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes marquee-right {
-          0%   { transform: translateX(-50%); }
-          100% { transform: translateX(0); }
-        }
-        .marquee-track-left {
-          display: flex;
-          width: max-content;
-          animation: marquee-left 28s linear infinite;
-        }
-        .marquee-track-right {
-          display: flex;
-          width: max-content;
-          animation: marquee-right 28s linear infinite;
-        }
-      `}</style>
-
       <section style={{ background: '#F7F5F0', padding: '80px 24px' }}>
         <div style={{ maxWidth: 1215, margin: '0 auto' }}>
 

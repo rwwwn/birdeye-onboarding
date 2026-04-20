@@ -68,3 +68,23 @@ body {
     font-family: var(--font-display);
   }
 }
+
+/* Marquee animations */
+@keyframes marquee-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.marquee-track-left {
+  display: flex;
+  width: max-content;
+  animation: marquee-left 20s linear infinite;
+}
+.marquee-track-right {
+  display: flex;
+  width: max-content;
+  animation: marquee-right 20s linear infinite;
+}
