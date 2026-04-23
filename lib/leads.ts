@@ -44,7 +44,7 @@ export async function captureLead(data: LeadData): Promise<{ success: boolean; e
 
     // Ping n8n webhook after successful insert
     try {
-      await fetch('https://rwn.app.n8n.cloud/webhook/new-lead', {
+      await fetch('https://hangover-hamburger-bulginess.ngrok-free.dev/webhook/new-lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
